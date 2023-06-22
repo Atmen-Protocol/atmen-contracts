@@ -1,9 +1,9 @@
 const hre = require("hardhat");
 
 async function main() {
-    var abi = ["function closeNoVerify(address,uint256)"];
+    var abi = ["function reveal(bytes32,bytes32)"];
     var iface = new ethers.utils.Interface(abi);
-    var id = iface.getSighash("closeNoVerify");
+    var id = iface.getSighash("reveal");
 
     const [owner] = await ethers.getSigners();
     console.log("Address", owner.address);

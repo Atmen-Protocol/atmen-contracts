@@ -16,15 +16,15 @@ async function main() {
         gasPrice: 2000000000,
     });
 
-    const AtomicCloak = await ethers.getContractFactory("AtomicCloak", {
+    const AtmenSwap = await ethers.getContractFactory("AtmenSwap", {
         libraries: { ECCUtils: eccUtils.address },
     });
 
-    const cloackDeployTrs = await AtomicCloak.connect(deployer).deploy(
+    const deployTrs = await AtmenSwap.connect(deployer).deploy(
         process.env.ENTRY_POINT_ADDRESS,
         { gasPrice: 2000000000 }
     );
-    console.log(cloackDeployTrs.address);
+    console.log(deployTrs.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -3,30 +3,27 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 async function main() {
     const ECCUtils = await ethers.getContractFactory("ECCUtils");
-    const eccUtils = await ECCUtils.deploy();
+    const eccUtils = await ECCUtils.attach(process.env.ECC_ADDRESS);
 
-    const AtomicCloak = await ethers.getContractFactory("AtomicCloak", {
+    const AtmenSwap = await ethers.getContractFactory("AtmenSwap", {
         libraries: { ECCUtils: eccUtils.address },
     });
-    const atomicCloak = await AtomicCloak.attach(
-        process.env.CONTRACT_ADDRESS_SEPOLIA
+    const atmenSwap = await AtmenSwap.attach(
+        process.env.ATMEN_ADDRESS
     );
-    secret = ethers.utils.randomBytes(32);
+    const secret = ethers.utils.randomBytes(32);
     console.log("Secret: ", secret);
-    const [qx, qy] = await atomicCloak.commitmentFromSecret(secret);
-    console.log("qx:", qx);
-    console.log("qy:", qy);
+    const commitID = await atmenSwap.commitmentFromSecret(secret);
     const recipient = "0xBDd182877dEc564d96c4A6e21920F237487d01aD";
 
     const blockNumBefore = await ethers.provider.getBlockNumber();
     const blockBefore = await ethers.provider.getBlock(blockNumBefore);
     const timestampBefore = blockBefore.timestamp;
 
-    const trs = await atomicCloak.openETH(
-        qx,
-        qy,
-        recipient,
+    const trs = await atmenSwap.openETHSwap(
+        secret,
         timestampBefore + 100,
+        recipient,
         {
             value: 100,
         }

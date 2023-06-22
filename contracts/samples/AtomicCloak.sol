@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@account-abstraction/contracts/core/BaseAccount.sol";
-import {ECCUtils} from "./ECCUtils.sol";
+import {ECCUtils} from "../lib/ECCUtils.sol";
 
 contract AtomicCloak is BaseAccount {
     struct Swap {
