@@ -17,11 +17,42 @@ abstract contract BaseSecretHolder {
      * @param timelock The timelock indicating when the commitment will expire.
      */
     modifier commitment(bytes32 commitID, uint256 timelock) {
-        require(commitments[commitID] == 0, "commitment already exists");
-        require(timelock > block.timestamp, "timelock must be in the future");
+        require(commitments[commitID] == 0, "Commitment already exists.");
+        require(
+            timelock > block.timestamp,
+            "Timelock value must be in the future."
+        );
         _;
         commitments[commitID] = timelock;
         emit Open(commitID);
+    }
+
+    /**
+     * @dev closes a commitment.
+     * @param commitID The commitment ID.
+     * @param secret The secret.
+     */
+    modifier secreatReveal(bytes32 commitID, bytes32 secret) {
+        require(commitments[commitID] > 0, "Commitment does not exist.");
+        uint256 timelock = commitments[commitID];
+        delete commitments[commitID];
+        require(timelock >= block.timestamp, "Commitment has expired.");
+        require(commitmentFromSecret(secret) == commitID, "Invalid secret.");
+        _;
+        emit Close(commitID, secret);
+    }
+
+    /**
+     * @dev Expires a commitment.
+     * @param commitID The commitment ID.
+     */
+    modifier commitmentExpire(bytes32 commitID) {
+        require(commitments[commitID] > 0, "Commitment does not exist.");
+        uint256 timelock = commitments[commitID];
+        delete commitments[commitID];
+        require(timelock < block.timestamp, "Commitment has not expired.");
+        _;
+        emit Expire(commitID);
     }
 
     /**
@@ -32,35 +63,4 @@ abstract contract BaseSecretHolder {
     function commitmentFromSecret(
         bytes32 secret
     ) public pure virtual returns (bytes32);
-
-    /**
-     * @dev Creates a new commitment.
-     * @param commitID The commitment ID.
-     * @param secret The secret.
-     */
-    function reveal(bytes32 commitID, bytes32 secret) public virtual {
-        require(commitments[commitID] > 0, "commitment does not exist");
-        uint256 timelock = commitments[commitID];
-        delete commitments[commitID];
-        if (timelock > block.timestamp) {
-            require(commitmentFromSecret(secret) == commitID, "invalid secret");
-            _close(commitID);
-            emit Close(commitID, secret);
-        } else {
-            _expire(commitID);
-            emit Expire(commitID);
-        }
-    }
-
-    /**
-     * @dev Run custom logic when closing.
-     * @param commitID The commitment ID.
-     */
-    function _close(bytes32 commitID) internal virtual;
-
-    /**
-     * @dev Run custom logic when expiring.
-     * @param commitID The commitment ID.
-     */
-    function _expire(bytes32 commitID) internal virtual;
 }

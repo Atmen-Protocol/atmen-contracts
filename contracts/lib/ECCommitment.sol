@@ -1,17 +1,73 @@
 // SPDX-License-Identifier: GPL-3.0
-// https://github.com/1Address/ecsol/blob/master/contracts/EC.sol
 
 pragma solidity ^0.8.18;
 
-library ECCUtils {
+library ECCommitment {
     uint256 public constant gx =
         0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
     uint256 public constant gy =
         0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
-    uint256 public constant n =
-        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
     uint256 public constant a = 0;
     uint256 public constant b = 7;
+    uint8 public constant gyParity = 27;
+    uint256 public constant n =
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
+    uint256 public constant q =
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
+
+    /**
+     * @dev Returns the address from a given point.
+     * @param qx x-coordinate of the point.
+     * @param qy y-coordinate of the point.
+     * @return The address.
+     */
+    function commitmentFromPoint(
+        uint256 qx,
+        uint256 qy
+    ) public pure returns (bytes32) {
+        return
+            bytes32(
+                uint256(keccak256(abi.encodePacked(qx, qy))) &
+                    0x00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            );
+    }
+
+    /**
+     * Calculates the commitment from an initial commitment and a shared secret.
+     * This function should be used as a tool to calculate the mirror commitment.
+     * @param qx x-coordinate of the initial commitment.
+     * @param qy y-coordinate of the initial commitment.
+     * @param sharedSecret that generates the commitment.
+     * @return x- and y-coordinates of the new commitment.
+     */
+    function commitmentFromSharedSecret(
+        uint256 qx,
+        uint256 qy,
+        bytes32 sharedSecret
+    ) external pure returns (bytes32) {
+        (uint256 _qx, uint256 _qy) = ecmul(gx, gy, uint256(sharedSecret));
+
+        (uint256 _qsx, uint256 _qsy) = ecadd(qx, qy, _qx, _qy);
+        return commitmentFromPoint(_qsx, _qsy);
+    }
+
+    /**
+     * @dev Returns the commitment ID from a given secret.
+     * @param secret The secret.
+     * @return The commitment ID.
+     */
+    function commitmentFromSecret(
+        bytes32 secret
+    ) public pure returns (bytes32) {
+        address _addr = ecrecover(
+            0,
+            gyParity,
+            bytes32(gx),
+            bytes32(mulmod(uint256(secret), gx, q))
+        );
+
+        return bytes32(uint256(uint160(_addr)));
+    }
 
     function _jAdd(
         uint256 x1,
@@ -182,58 +238,5 @@ library ECCUtils {
         z = _inverse(z);
         x2 = mulmod(x2, z, n);
         y2 = mulmod(y2, z, n);
-    }
-
-    //
-    // Based on the original idea of Vitalik Buterin:
-    // https://ethresear.ch/t/you-can-kinda-abuse-ecrecover-to-do-ecmul-in-secp256k1-today/2384/9
-    //
-    function ecmulVerify(
-        uint256 x1,
-        uint256 y1,
-        uint256 scalar,
-        uint256 qx,
-        uint256 qy
-    ) public pure returns (bool) {
-        uint256 m = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
-        address signer = ecrecover(
-            0,
-            y1 % 2 != 0 ? 28 : 27,
-            bytes32(x1),
-            bytes32(mulmod(scalar, x1, m))
-        );
-        address xyAddress = address(
-            uint160(
-                uint256(keccak256(abi.encodePacked(qx, qy))) &
-                    0x00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            )
-        );
-        return xyAddress == signer;
-    }
-
-    function publicKey(
-        uint256 privKey
-    ) public pure returns (uint256 qx, uint256 qy) {
-        return ecmul(gx, gy, privKey);
-    }
-
-    function publicKeyVerify(
-        uint256 privKey,
-        uint256 x,
-        uint256 y
-    ) public pure returns (bool) {
-        return ecmulVerify(gx, gy, privKey, x, y);
-    }
-
-    function deriveKey(
-        uint256 privKey,
-        uint256 pubX,
-        uint256 pubY
-    ) public pure returns (uint256 qx, uint256 qy) {
-        uint256 z;
-        (qx, qy, z) = _ecMul(privKey, pubX, pubY, 1);
-        z = _inverse(z);
-        qx = mulmod(qx, z, n);
-        qy = mulmod(qy, z, n);
     }
 }

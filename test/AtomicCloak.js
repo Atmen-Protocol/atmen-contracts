@@ -204,19 +204,27 @@ describe("AtomicCloak", function () {
         });
 
         it("Should verify commitment", async function () {
-            const { atomicCloak } = await loadFixture(deployAtomicCloak);
+            const { atomicCloak, eccUtils } = await loadFixture(
+                deployAtomicCloak
+            );
 
             const qx =
                 "0xaddcb45773b26a2f8ac2143627d54f47a12aab533dc1b41b4e791985e9eca496";
             const qy =
                 "0x72da5adb3a30a2cf147d309b0cf58c76b322c82a5edae164e13dbeed6429c41d";
 
-            const hashedCommitment = await atomicCloak.commitmentToAddress(
+            const hashedCommitment = await atomicCloak.commitmentFromPoint(
                 qx,
                 qy
             );
             secret =
                 "0x1787f38d854231dfec2b27a0f621414d10bfa95970b3e576aed29e1e8287e51e";
+
+            const [sx, sy] = await eccUtils.ecmul(
+                await eccUtils.gx(),
+                await eccUtils.gy(),
+                secret
+            );
 
             expect(await atomicCloak.getHashedCommitment(secret)).to.equal(
                 hashedCommitment
@@ -228,7 +236,7 @@ describe("AtomicCloak", function () {
 
             const secret = ethers.utils.randomBytes(32);
             const [qx, qy] = await atomicCloak.commitmentFromSecret(secret);
-            const hashedCommitment = await atomicCloak.commitmentToAddress(
+            const hashedCommitment = await atomicCloak.commitmentFromPoint(
                 qx,
                 qy
             );
@@ -253,7 +261,7 @@ describe("AtomicCloak", function () {
 
             const secret = ethers.utils.randomBytes(32);
             const [qx, qy] = await atomicCloak.commitmentFromSecret(secret);
-            const hashedCommitment = await atomicCloak.commitmentToAddress(
+            const hashedCommitment = await atomicCloak.commitmentFromPoint(
                 qx,
                 qy
             );
@@ -277,7 +285,7 @@ describe("AtomicCloak", function () {
                 sharedSecret
             );
             const hashedSharedCommitment =
-                await atomicCloak.commitmentToAddress(qsx, qsy);
+                await atomicCloak.commitmentFromPoint(qsx, qsy);
             // console.log("Shared secret:", sharedSecret);
             // console.log(
             //     "Shared Commitment: (",
@@ -324,7 +332,7 @@ describe("AtomicCloak", function () {
                 )
             ).not.to.be.reverted;
 
-            const hashedCommitment = await atomicCloak.commitmentToAddress(
+            const hashedCommitment = await atomicCloak.commitmentFromPoint(
                 qx,
                 qy
             );
@@ -421,7 +429,7 @@ describe("AtomicCloak", function () {
             console.log("Gas used:", openTrsReceipt.gasUsed.toNumber());
 
             const hashedSharedCommitment =
-                await atomicCloak.commitmentToAddress(qsx, qsy);
+                await atomicCloak.commitmentFromPoint(qsx, qsy);
 
             let modifiedSecret =
                 BigInt("0x" + Buffer.from(secret).toString("hex")) +
@@ -456,7 +464,7 @@ describe("AtomicCloak", function () {
             );
 
             const hashedSharedCommitment =
-                await atomicCloak.commitmentToAddress(qsx, qsy);
+                await atomicCloak.commitmentFromPoint(qsx, qsy);
 
             let modifiedSecret =
                 BigInt("0x" + Buffer.from(secret).toString("hex")) +
@@ -497,7 +505,7 @@ describe("AtomicCloak", function () {
                 )
             ).not.to.be.reverted;
             const hashedSharedCommitment =
-                await atomicCloak.commitmentToAddress(qsx, qsy);
+                await atomicCloak.commitmentFromPoint(qsx, qsy);
 
             let modifiedSecret =
                 BigInt("0x" + Buffer.from(secret).toString("hex")) +
@@ -533,7 +541,7 @@ describe("AtomicCloak", function () {
                 )
             ).not.to.be.reverted;
 
-            const hashedCommitment = await atomicCloak.commitmentToAddress(
+            const hashedCommitment = await atomicCloak.commitmentFromPoint(
                 qx,
                 qy
             );
@@ -561,7 +569,7 @@ describe("AtomicCloak", function () {
                     }
                 )
             ).not.to.be.reverted;
-            const hashedCommitment = await atomicCloak.commitmentToAddress(
+            const hashedCommitment = await atomicCloak.commitmentFromPoint(
                 qx,
                 qy
             );

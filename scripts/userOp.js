@@ -17,7 +17,7 @@ async function main() {
     const [qx, qy] = await atomicCloak.commitmentFromSecret(secret);
     console.log("Secret: ", Buffer.from(secret).toString("hex"));
 
-    const hashedCommitment = await atomicCloak.commitmentToAddress(qx, qy);
+    const hashedCommitment = await atomicCloak.commitmentFromPoint(qx, qy);
     console.log("qx:", qx);
     console.log("qy:", qy);
     const recipient = ethers.utils.randomBytes(20);

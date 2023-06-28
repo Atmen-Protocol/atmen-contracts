@@ -14,7 +14,7 @@
 
 ## V2
 
--   Introduce DH-like secret sharing to calculate shared secret. This avoid MITM attacks and facilitates introducing a tool to exchange secrets P2P, without having to trust a central server.
+-   Introduce DH-like secret sharing to calculate shared secret. This avoid MITM attacks and facilitates introducing a tool to exchange secrets P2P, without having to trust a central server. For instance, somethin similar to stealth accounts. This also solves legal issues in that we can only send (privately) to random receiving addresses, ensuring that the user has the private key for it.
 -   Investigate using ZKproofs instead of Schnorr, or maybe polynomial commitments.
 -   Bridge to non-evm chains; Lisk done
 -   Implement own bundler; done, must fix mistakes
@@ -22,6 +22,8 @@
 -   implement close several userOps at once
 -   separate bundler address from provider
 -   provider uses a pool of addresses not only one
+-   close with trs: no extra fee cost
+-   close with userOp: pay max fixed fee cost. Fix maxPriorityFeePerGas in verification, calculate userOp.gasPrice() and use max possible gas used (to be found)
 
 ## Possible Ideas
 
