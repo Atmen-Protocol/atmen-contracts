@@ -24,6 +24,7 @@
 -   provider uses a pool of addresses not only one
 -   close with trs: no extra fee cost
 -   close with userOp: pay max fixed fee cost. Fix maxPriorityFeePerGas in verification, calculate userOp.gasPrice() and use max possible gas used (to be found)
+-   several options for commitment type (hash, polynomial, etc) when opening swap
 
 ## Possible Ideas
 
